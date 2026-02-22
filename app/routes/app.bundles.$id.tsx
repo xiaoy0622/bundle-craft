@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { redirect, useLoaderData, useNavigate } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { useFetcher } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -43,7 +43,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, redirect } = await authenticate.admin(request);
   const formData = await request.formData();
   const intent = formData.get("intent");
 
@@ -63,6 +63,28 @@ export default function EditBundle() {
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const shopify = useAppBridge();
+  const backBtnRef = useRef<HTMLElement>(null);
+  const deleteBtnRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = backBtnRef.current;
+    if (!el) return;
+    const handler = () => navigate("/app");
+    el.addEventListener("click", handler);
+    return () => el.removeEventListener("click", handler);
+  }, [navigate]);
+
+  useEffect(() => {
+    const el = deleteBtnRef.current;
+    if (!el) return;
+    const handler = () => {
+      // eslint-disable-next-line no-restricted-globals
+      if (!confirm("Are you sure you want to delete this bundle?")) return;
+      fetcher.submit({ intent: "delete" }, { method: "POST" });
+    };
+    el.addEventListener("click", handler);
+    return () => el.removeEventListener("click", handler);
+  }, [fetcher]);
 
   useEffect(() => {
     if (fetcher.data && fetcher.state === "idle") {
@@ -70,21 +92,15 @@ export default function EditBundle() {
     }
   }, [fetcher.data, fetcher.state, shopify]);
 
-  const handleDelete = () => {
-    // eslint-disable-next-line no-restricted-globals
-    if (!confirm("Are you sure you want to delete this bundle?")) return;
-    fetcher.submit({ intent: "delete" }, { method: "POST" });
-  };
-
   return (
     <s-page heading={`Edit: ${bundle.title}`}>
-      <s-button slot="secondary-action" onClick={() => navigate("/app")}>
+      <s-button ref={backBtnRef} slot="secondary-action">
         Back
       </s-button>
       <s-button
+        ref={deleteBtnRef}
         slot="secondary-action"
         tone="critical"
-        onClick={handleDelete}
       >
         Delete
       </s-button>

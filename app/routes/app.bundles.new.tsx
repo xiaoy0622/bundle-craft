@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
   LoaderFunctionArgs,
 } from "react-router";
-import { redirect, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useFetcher } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -18,7 +18,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session, redirect } = await authenticate.admin(request);
   const formData = await request.formData();
   const data = JSON.parse(formData.get("data") as string);
 
@@ -31,6 +31,15 @@ export default function NewBundle() {
   const navigate = useNavigate();
   const fetcher = useFetcher();
   const shopify = useAppBridge();
+  const backBtnRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = backBtnRef.current;
+    if (!el) return;
+    const handler = () => navigate("/app");
+    el.addEventListener("click", handler);
+    return () => el.removeEventListener("click", handler);
+  }, [navigate]);
 
   useEffect(() => {
     if (fetcher.data && fetcher.state === "idle") {
@@ -40,7 +49,7 @@ export default function NewBundle() {
 
   return (
     <s-page heading="Create bundle">
-      <s-button slot="secondary-action" onClick={() => navigate("/app")}>
+      <s-button ref={backBtnRef} slot="secondary-action">
         Back
       </s-button>
       <BundleForm />

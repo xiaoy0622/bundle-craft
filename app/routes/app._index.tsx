@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
@@ -14,6 +14,7 @@ import {
   deleteBundle,
   duplicateBundle,
   archiveBundle,
+  activateBundle,
 } from "../models/bundle.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -30,7 +31,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     draft: allBundles.filter((b) => b.status === "draft").length,
   };
 
-  return { bundles, stats, status };
+  // Format dates on the server to avoid hydration mismatch
+  const formattedBundles = bundles.map((b) => ({
+    ...b,
+    formattedDate: new Date(b.createdAt).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }),
+  }));
+
+  return { bundles: formattedBundles, stats, status };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -49,10 +60,28 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     case "archive":
       await archiveBundle(bundleId, session.shop, admin);
       break;
+    case "activate":
+      await activateBundle(bundleId, session.shop, admin);
+      break;
   }
 
   return { ok: true };
 };
+
+/**
+ * Hook to attach a native click listener via ref.
+ * Needed for <s-button> in <s-page> slots where React's onClick doesn't fire.
+ */
+function useSlotClick(handler: () => void) {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.addEventListener("click", handler);
+    return () => el.removeEventListener("click", handler);
+  }, [handler]);
+  return ref;
+}
 
 export default function BundleDashboard() {
   const { bundles, stats, status } = useLoaderData<typeof loader>();
@@ -61,6 +90,8 @@ export default function BundleDashboard() {
   const shopify = useAppBridge();
 
   const isDeleting = fetcher.state !== "idle";
+
+  const createBtnRef = useSlotClick(() => navigate("/app/bundles/new"));
 
   useEffect(() => {
     if (fetcher.data && fetcher.state === "idle") {
@@ -84,9 +115,9 @@ export default function BundleDashboard() {
   return (
     <s-page heading="Bundles">
       <s-button
+        ref={createBtnRef}
         slot="primary-action"
         variant="primary"
-        onClick={() => navigate("/app/bundles/new")}
       >
         Create bundle
       </s-button>
@@ -194,10 +225,7 @@ export default function BundleDashboard() {
                             ? `$${bundle.discountValue} off`
                             : `$${bundle.discountValue} fixed price`}
                       </s-text>
-                      <s-text>
-                        Created{" "}
-                        {new Date(bundle.createdAt).toLocaleDateString()}
-                      </s-text>
+                      <s-text>Created {bundle.formattedDate}</s-text>
                     </s-stack>
                   </div>
                   <s-stack direction="inline" gap="small">
@@ -214,6 +242,15 @@ export default function BundleDashboard() {
                     >
                       Duplicate
                     </s-button>
+                    {bundle.status !== "active" && (
+                      <s-button
+                        variant="tertiary"
+                        onClick={() => handleAction("activate", bundle.id)}
+                        {...(isDeleting ? { disabled: true } : {})}
+                      >
+                        Activate
+                      </s-button>
+                    )}
                     {bundle.status !== "archived" && (
                       <s-button
                         variant="tertiary"

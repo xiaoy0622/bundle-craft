@@ -533,6 +533,161 @@ export async function archiveBundle(
   });
 }
 
+export async function activateBundle(
+  id: string,
+  shop: string,
+  admin: { graphql: (...args: any[]) => any },
+) {
+  const bundle = await db.bundle.findFirst({
+    where: { id, shop },
+    include: { components: true },
+  });
+  if (!bundle) return null;
+
+  if (bundle.productId) {
+    // Bundle already has a Shopify product — just set it to ACTIVE
+    await admin.graphql(
+      `#graphql
+      mutation productUpdate($product: ProductUpdateInput!) {
+        productUpdate(product: $product) {
+          product { id }
+          userErrors { field message }
+        }
+      }`,
+      {
+        variables: {
+          product: { id: bundle.productId, status: "ACTIVE" },
+        },
+      },
+    );
+  } else {
+    // No Shopify product yet (e.g. duplicated bundle) — create one
+    const originalPrice = bundle.components.reduce(
+      (sum, c) => sum + parseFloat(c.price) * c.quantity,
+      0,
+    );
+    const bundlePrice = calculateBundlePrice(
+      originalPrice,
+      bundle.discountType,
+      bundle.discountValue,
+    );
+
+    const productResponse = await admin.graphql(
+      `#graphql
+      mutation productCreate($product: ProductCreateInput!) {
+        productCreate(product: $product) {
+          product {
+            id
+            handle
+            variants(first: 1) { edges { node { id } } }
+          }
+          userErrors { field message }
+        }
+      }`,
+      {
+        variables: {
+          product: {
+            title: bundle.title,
+            descriptionHtml: bundle.description || "",
+            productType: "Bundle",
+            tags: ["bundlecraft", "bundle"],
+            status: "ACTIVE",
+            claimOwnership: { bundles: true },
+          },
+        },
+      },
+    );
+
+    const productJson = await productResponse.json();
+    const product = productJson.data?.productCreate?.product;
+
+    if (product) {
+      const productId = product.id;
+      const variantId = product.variants.edges[0]?.node?.id;
+
+      if (variantId) {
+        const variantRefs = bundle.components.map((c) => c.variantId);
+        const variantQtys = bundle.components.map((c) => c.quantity);
+
+        await admin.graphql(
+          `#graphql
+          mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+            productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+              productVariants { id }
+              userErrors { field message }
+            }
+          }`,
+          {
+            variables: {
+              productId,
+              variants: [
+                {
+                  id: variantId,
+                  price: bundlePrice.toFixed(2),
+                  requiresComponents: true,
+                },
+              ],
+            },
+          },
+        );
+
+        await admin.graphql(
+          `#graphql
+          mutation metafieldsSet($metafields: [MetafieldsSetInput!]!) {
+            metafieldsSet(metafields: $metafields) {
+              metafields { id }
+              userErrors { field message }
+            }
+          }`,
+          {
+            variables: {
+              metafields: [
+                {
+                  ownerId: variantId,
+                  namespace: "custom",
+                  key: "component_reference",
+                  type: "list.variant_reference",
+                  value: JSON.stringify(variantRefs),
+                },
+                {
+                  ownerId: variantId,
+                  namespace: "custom",
+                  key: "component_quantities",
+                  type: "list.number_integer",
+                  value: JSON.stringify(variantQtys),
+                },
+              ],
+            },
+          },
+        );
+      }
+
+      await publishProduct(admin, productId);
+
+      await db.bundle.update({
+        where: { id },
+        data: { productId, variantId, status: "active" },
+      });
+
+      const componentProductIds = bundle.components.map((c) => c.productId);
+      await syncBundleOffersOnProducts(admin, componentProductIds);
+
+      return { ...bundle, productId, variantId, status: "active" };
+    }
+  }
+
+  const updated = await db.bundle.update({
+    where: { id },
+    data: { status: "active" },
+  });
+
+  // Re-sync metafields so this bundle appears in component product offers
+  const componentProductIds = bundle.components.map((c) => c.productId);
+  await syncBundleOffersOnProducts(admin, componentProductIds);
+
+  return updated;
+}
+
 /**
  * For each given component product, find all active bundles it belongs to
  * and set a JSON metafield with bundle offer info on the product.

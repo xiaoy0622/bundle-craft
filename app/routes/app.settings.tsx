@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import type {
   ActionFunctionArgs,
   HeadersFunction,
@@ -77,7 +77,7 @@ export default function Settings() {
     }
   }, [fetcher.data, fetcher.state, shopify]);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     fetcher.submit(
       {
         defaultDiscountType,
@@ -86,14 +86,22 @@ export default function Settings() {
       },
       { method: "POST" },
     );
-  };
+  }, [fetcher, defaultDiscountType, defaultBadgeText, showSavings]);
+
+  const saveBtnRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = saveBtnRef.current;
+    if (!el) return;
+    el.addEventListener("click", handleSubmit);
+    return () => el.removeEventListener("click", handleSubmit);
+  }, [handleSubmit]);
 
   return (
     <s-page heading="Settings">
       <s-button
+        ref={saveBtnRef}
         slot="primary-action"
         variant="primary"
-        onClick={handleSubmit}
         {...(isSubmitting ? { loading: true } : {})}
       >
         Save
