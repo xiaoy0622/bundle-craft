@@ -19,9 +19,17 @@ api_version = "2026-04"
   topics = [ "app/scopes_update" ]
   uri = "/webhooks/app/scopes_update"
 
+  [[webhooks.subscriptions]]
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+  uri = "/webhooks"
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "write_products,read_products,write_cart_transforms,read_cart_transforms,read_publications,write_publications"
 
 [auth]
-redirect_urls = [ "https://bundle-craft-server-production.up.railway.app/api/auth" ]
+redirect_urls = [
+  "https://bundle-craft-server-production.up.railway.app/auth/callback",
+  "https://bundle-craft-server-production.up.railway.app/auth/shopify/callback",
+  "https://bundle-craft-server-production.up.railway.app/api/auth"
+]
