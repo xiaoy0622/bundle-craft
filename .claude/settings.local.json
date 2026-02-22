@@ -12,7 +12,10 @@
       "Bash(cd /Users/qiuyuanyin/aurora/bundle-craft/extensions/bundle-cart-transform && npm run typegen 2>&1)",
       "Bash(npm run:*)",
       "Bash(npx react-router:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(brew install:*)",
+      "Bash(head:*)",
+      "Bash(railway link:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
