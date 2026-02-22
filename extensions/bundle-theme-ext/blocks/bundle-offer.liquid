@@ -1,0 +1,332 @@
+{% comment %}
+  Bundle Offer Block — shows on product pages when the product is part of a bundle.
+  Reads the "custom.bundle_offers" JSON metafield set by the BundleCraft app.
+{% endcomment %}
+
+{% assign bundle_offers_json = product.metafields.custom.bundle_offers.value %}
+
+{% if bundle_offers_json != blank and bundle_offers_json.size > 0 %}
+  <div
+    class="bundle-offer bundle-offer--{{ block.settings.card_style }}"
+    style="
+      --bo-accent: {{ block.settings.accent_color }};
+      --bo-bg: {{ block.settings.background_color }};
+      --bo-text: {{ block.settings.text_color }};
+      --bo-badge-text: {{ block.settings.badge_text_color }};
+      --bo-btn-text: {{ block.settings.button_text_color }};
+      --bo-radius: {{ block.settings.border_radius }}px;
+      --bo-btn-radius: {{ block.settings.button_radius }}px;
+      --bo-font-size: {{ block.settings.font_size }}px;
+      --bo-padding: {{ block.settings.content_padding }}px;
+      --bo-border-width: {{ block.settings.border_width }}px;
+      --bo-spacing: {{ block.settings.spacing }}px;
+    "
+  >
+    {% for offer in bundle_offers_json %}
+      <div class="bundle-offer__card">
+        {% if block.settings.show_badge %}
+          <div class="bundle-offer__badge">
+            {{ block.settings.badge_text }}
+          </div>
+        {% endif %}
+        <div class="bundle-offer__content">
+          <p class="bundle-offer__title">
+            {{ block.settings.title_prefix }}
+            {% if offer.handle != blank %}
+              <a href="/products/{{ offer.handle }}" class="bundle-offer__link">
+                {{ offer.bundleTitle }}
+              </a>
+            {% else %}
+              <strong>{{ offer.bundleTitle }}</strong>
+            {% endif %}
+          </p>
+          {% if offer.discountLabel != blank and block.settings.show_discount %}
+            <p class="bundle-offer__discount">
+              {{ block.settings.discount_prefix }} <strong>{{ offer.discountLabel }}</strong> {{ block.settings.discount_suffix }}
+            </p>
+          {% endif %}
+          {% if offer.handle != blank and block.settings.show_button %}
+            <a href="/products/{{ offer.handle }}" class="bundle-offer__button">
+              {{ block.settings.button_text }}
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<style>
+  .bundle-offer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bo-spacing, 12px);
+    margin: 16px 0;
+  }
+
+  /* Card base */
+  .bundle-offer__card {
+    border-radius: var(--bo-radius, 8px);
+    overflow: hidden;
+  }
+
+  /* Style: outlined (default) */
+  .bundle-offer--outlined .bundle-offer__card {
+    border: var(--bo-border-width, 2px) solid var(--bo-accent, #2c6ecb);
+    background: var(--bo-bg, #ffffff);
+  }
+
+  /* Style: filled */
+  .bundle-offer--filled .bundle-offer__card {
+    border: none;
+    background: var(--bo-bg, #f0f5ff);
+  }
+
+  /* Style: minimal */
+  .bundle-offer--minimal .bundle-offer__card {
+    border: none;
+    border-left: 4px solid var(--bo-accent, #2c6ecb);
+    background: var(--bo-bg, #f9f9f9);
+    border-radius: 0;
+  }
+
+  /* Style: shadow */
+  .bundle-offer--shadow .bundle-offer__card {
+    border: var(--bo-border-width, 1px) solid #e0e0e0;
+    background: var(--bo-bg, #ffffff);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Badge */
+  .bundle-offer__badge {
+    background: var(--bo-accent, #2c6ecb);
+    color: var(--bo-badge-text, #ffffff);
+    font-size: calc(var(--bo-font-size, 14px) - 2px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 12px;
+  }
+  .bundle-offer--minimal .bundle-offer__badge {
+    background: transparent;
+    color: var(--bo-accent, #2c6ecb);
+    padding: var(--bo-padding, 16px) var(--bo-padding, 16px) 0;
+  }
+
+  /* Content */
+  .bundle-offer__content {
+    padding: var(--bo-padding, 16px);
+    color: var(--bo-text, #333333);
+  }
+  .bundle-offer__title {
+    margin: 0 0 4px;
+    font-size: var(--bo-font-size, 14px);
+    line-height: 1.5;
+    color: var(--bo-text, #333333);
+  }
+  .bundle-offer__link {
+    color: var(--bo-accent, #2c6ecb);
+    text-decoration: underline;
+    font-weight: 600;
+  }
+  .bundle-offer__discount {
+    margin: 0 0 12px;
+    font-size: var(--bo-font-size, 14px);
+    color: var(--bo-text, #333333);
+  }
+
+  /* Button */
+  .bundle-offer__button {
+    display: inline-block;
+    background: var(--bo-accent, #2c6ecb);
+    color: var(--bo-btn-text, #ffffff);
+    text-decoration: none;
+    padding: 10px 24px;
+    border-radius: var(--bo-btn-radius, 6px);
+    font-size: var(--bo-font-size, 14px);
+    font-weight: 600;
+    transition: opacity 0.2s;
+  }
+  .bundle-offer__button:hover {
+    opacity: 0.85;
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Bundle Offer",
+  "target": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "badge_text",
+      "label": "Badge text",
+      "default": "Bundle & Save"
+    },
+    {
+      "type": "text",
+      "id": "title_prefix",
+      "label": "Title prefix",
+      "default": "This product is part of"
+    },
+    {
+      "type": "text",
+      "id": "discount_prefix",
+      "label": "Discount prefix",
+      "default": "Save"
+    },
+    {
+      "type": "text",
+      "id": "discount_suffix",
+      "label": "Discount suffix",
+      "default": "when you buy the bundle!"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "View Bundle"
+    },
+    {
+      "type": "header",
+      "content": "Visibility"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_badge",
+      "label": "Show badge",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_discount",
+      "label": "Show discount info",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_button",
+      "label": "Show button",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "select",
+      "id": "card_style",
+      "label": "Card style",
+      "options": [
+        { "value": "outlined", "label": "Outlined" },
+        { "value": "filled", "label": "Filled" },
+        { "value": "minimal", "label": "Minimal (left border)" },
+        { "value": "shadow", "label": "Shadow" }
+      ],
+      "default": "outlined"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#2c6ecb"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "badge_text_color",
+      "label": "Badge text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Sizing"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Font size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "default": 14,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Card corner radius",
+      "min": 0,
+      "max": 24,
+      "step": 2,
+      "default": 8,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "label": "Border width",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 2,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "content_padding",
+      "label": "Content padding",
+      "min": 8,
+      "max": 32,
+      "step": 4,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "button_radius",
+      "label": "Button corner radius",
+      "min": 0,
+      "max": 24,
+      "step": 2,
+      "default": 6,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "spacing",
+      "label": "Spacing between offers",
+      "min": 4,
+      "max": 24,
+      "step": 4,
+      "default": 12,
+      "unit": "px"
+    }
+  ]
+}
+{% endschema %}

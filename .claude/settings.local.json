@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "mcp__shopify-dev-mcp__learn_shopify_api",
+      "mcp__shopify-dev-mcp__introspect_graphql_schema",
+      "mcp__shopify-dev-mcp__search_docs_chunks",
+      "mcp__shopify-dev-mcp__fetch_full_docs",
+      "mcp__shopify-dev-mcp__validate_graphql_codeblocks",
+      "Bash(echo \"3\" | npx shopify app generate extension --template cart_transform --name bundle-cart-transform 2>&1)",
+      "Bash(npx shopify:*)",
+      "Bash(cd /Users/qiuyuanyin/aurora/bundle-craft/extensions/bundle-cart-transform && npm run typegen 2>&1)",
+      "Bash(npm run:*)",
+      "Bash(npx react-router:*)",
+      "Bash(npx tsc:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "shopify-dev-mcp"
+  ]
+}

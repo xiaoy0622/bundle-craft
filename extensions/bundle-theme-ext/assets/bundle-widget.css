@@ -1,0 +1,185 @@
+.bundlecraft-widget {
+  --accent: var(--bundlecraft-accent, #4CAF50);
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  font-family: inherit;
+}
+
+.bundlecraft-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.bundlecraft-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bundlecraft-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Vertical layout */
+.bundlecraft-items--vertical .bundlecraft-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.bundlecraft-items--vertical .bundlecraft-item:last-child {
+  border-bottom: none;
+}
+
+/* Horizontal layout */
+.bundlecraft-items--horizontal {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.bundlecraft-items--horizontal .bundlecraft-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.bundlecraft-item-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #f0f0f0;
+}
+
+.bundlecraft-item-info {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.bundlecraft-item-title {
+  font-size: 14px;
+}
+
+.bundlecraft-item-qty {
+  font-size: 12px;
+  color: #666;
+}
+
+.bundlecraft-item-price {
+  font-size: 14px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.bundlecraft-pricing {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px 0;
+  border-top: 1px solid #e5e5e5;
+}
+
+.bundlecraft-original-price {
+  font-size: 14px;
+  color: #999;
+}
+
+.bundlecraft-bundle-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+}
+
+.bundlecraft-savings {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.bundlecraft-add-to-cart {
+  display: block;
+  width: 100%;
+  padding: 12px 24px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.bundlecraft-add-to-cart:hover {
+  opacity: 0.9;
+}
+
+.bundlecraft-add-to-cart:active {
+  opacity: 0.8;
+}
+
+.bundlecraft-add-to-cart:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bundlecraft-add-to-cart--loading {
+  position: relative;
+  color: transparent;
+}
+
+.bundlecraft-add-to-cart--loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: bundlecraft-spin 0.6s linear infinite;
+}
+
+@keyframes bundlecraft-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .bundlecraft-pricing {
+    flex-wrap: wrap;
+  }
+
+  .bundlecraft-items--horizontal {
+    flex-wrap: nowrap;
+  }
+}

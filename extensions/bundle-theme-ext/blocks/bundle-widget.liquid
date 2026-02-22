@@ -1,0 +1,119 @@
+{% comment %}
+  BundleCraft - Bundle Widget
+  Displays available bundle offers on product pages
+{% endcomment %}
+
+{% assign bundle_metafield = product.metafields.custom.bundle_config %}
+
+{% if bundle_metafield %}
+  {% assign bundle_data = bundle_metafield.value %}
+
+  <div class="bundlecraft-widget" data-bundle-id="{{ bundle_data.id }}" style="--bundlecraft-accent: {{ block.settings.accent_color }};">
+    <div class="bundlecraft-header">
+      {% if block.settings.badge_text != blank %}
+        <span class="bundlecraft-badge">{{ block.settings.badge_text }}</span>
+      {% endif %}
+      <h3 class="bundlecraft-title">{{ bundle_data.title | default: "Bundle Deal" }}</h3>
+    </div>
+
+    {% if bundle_data.components %}
+      <div class="bundlecraft-items bundlecraft-items--{{ block.settings.layout }}">
+        {% for item in bundle_data.components %}
+          <div class="bundlecraft-item">
+            {% if item.image %}
+              <img
+                class="bundlecraft-item-image"
+                src="{{ item.image | image_url: width: 120 }}"
+                alt="{{ item.title }}"
+                width="60"
+                height="60"
+                loading="lazy"
+              >
+            {% endif %}
+            <div class="bundlecraft-item-info">
+              <span class="bundlecraft-item-title">{{ item.title }}</span>
+              {% if item.quantity > 1 %}
+                <span class="bundlecraft-item-qty">&times;{{ item.quantity }}</span>
+              {% endif %}
+            </div>
+            {% if item.price %}
+              <span class="bundlecraft-item-price">{{ item.price | money }}</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if bundle_data.original_price and bundle_data.bundle_price %}
+      <div class="bundlecraft-pricing">
+        <div class="bundlecraft-original-price">
+          <s>{{ bundle_data.original_price | money }}</s>
+        </div>
+        <div class="bundlecraft-bundle-price">
+          {{ bundle_data.bundle_price | money }}
+        </div>
+        {% if block.settings.show_savings and bundle_data.savings %}
+          <div class="bundlecraft-savings">
+            Save {{ bundle_data.savings | money }}
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if bundle_data.variant_id %}
+      <button
+        class="bundlecraft-add-to-cart"
+        data-variant-id="{{ bundle_data.variant_id }}"
+        type="button"
+      >
+        {{ block.settings.button_text }}
+      </button>
+    {% endif %}
+  </div>
+
+  {{ 'bundle-widget.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'bundle-widget.js' | asset_url }}" defer></script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "BundleCraft Widget",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "badge_text",
+      "label": "Badge text",
+      "default": "Bundle & Save"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "Add Bundle to Cart"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#4CAF50"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Layout",
+      "options": [
+        { "value": "vertical", "label": "Vertical" },
+        { "value": "horizontal", "label": "Horizontal" }
+      ],
+      "default": "vertical"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_savings",
+      "label": "Show savings amount",
+      "default": true
+    }
+  ]
+}
+{% endschema %}
