@@ -7,6 +7,10 @@
      data-app-url="https://bundle-craft-server-production.up.railway.app"
      data-shop="{{ shop.permanent_domain }}"
      data-welcome="{{ block.settings.welcome_message | escape }}"
+     {% if customer %}
+       data-customer-name="{{ customer.first_name | escape }}"
+       data-customer-email="{{ customer.email | escape }}"
+     {% endif %}
      style="
        --bc-primary: {{ block.settings.primary_color }};
        --bc-primary-text: {{ block.settings.primary_text_color }};

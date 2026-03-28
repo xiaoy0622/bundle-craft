@@ -6,7 +6,12 @@
 
   var APP_URL = root.dataset.appUrl;
   var SHOP = root.dataset.shop;
-  var WELCOME = root.dataset.welcome || "Hi! How can I help you today?";
+  var CUSTOMER_NAME = root.dataset.customerName || "";
+  var CUSTOMER_EMAIL = root.dataset.customerEmail || "";
+  var defaultWelcome = root.dataset.welcome || "Hi! How can I help you today?";
+  var WELCOME = CUSTOMER_NAME
+    ? "Hi " + CUSTOMER_NAME + "! " + defaultWelcome
+    : defaultWelcome;
 
   // Session ID for conversation continuity
   var SESSION_KEY = "bc-chat-session";
@@ -251,6 +256,7 @@
         shop: SHOP,
         sessionId: sessionId,
         message: text,
+        customerEmail: CUSTOMER_EMAIL || undefined,
       }),
     })
       .then(function (res) {
