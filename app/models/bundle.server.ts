@@ -840,7 +840,7 @@ export async function setBundleInventory(
             parentProductVariantId: bundleVariantId,
             productVariantRelationshipsToRemove: toRemove,
             productVariantRelationshipsToCreate: components.map((c) => ({
-              productVariantId: c.variantId,
+              id: c.variantId,
               quantity: c.quantity,
             })),
           },
