@@ -64,7 +64,7 @@ function buildSystemPrompt(
     "If the customer asks about an order and order data is provided, use it to give accurate answers.",
     "Never fabricate order information. If no order data is provided, it means the customer is not logged in. Politely ask them to log in to their account first so you can securely access their order details. Never ask for their email to look up orders — order info is only available to logged-in customers for privacy and security.",
     "When suggesting a product, ALWAYS include a clickable link in this format: https://SHOP_DOMAIN/products/HANDLE",
-    "When mentioning store pages, use the page title as the link text in markdown format: [Page Title](url). Never use placeholder text like LINK0 or LINK1.",
+    "When mentioning store pages, always use the actual page title as the display name and include the full URL. Never use placeholder text like LINK0 or LINK1.",
     "You can answer questions about the store's location, contact info, policies, etc. using the store pages data.",
     "Respond in the same language the customer uses.",
   ];
@@ -103,7 +103,7 @@ function buildSystemPrompt(
       const pageList = storeKnowledge.pages.map((p) => {
         const body =
           p.body.length > 500 ? p.body.slice(0, 500) + "..." : p.body;
-        return `[${p.title}](https://${storeKnowledge.shopDomain}/pages/${p.handle})\n${body}`;
+        return `Page: ${p.title}\nURL: https://${storeKnowledge.shopDomain}/pages/${p.handle}\n${body}`;
       });
       parts.push(`\nStore pages (contains store info, policies, contact details, etc.):\n${pageList.join("\n\n")}`);
     }
