@@ -134,13 +134,20 @@ export async function syncPages(
     const response = (await (gqlAdmin as { graphql: Function }).graphql(
       `#graphql
       query Pages($cursor: String) {
-        pages(first: 50, after: $cursor) {
+        pages(first: 50, after: $cursor, query: "published_status:published") {
           pageInfo { hasNextPage endCursor }
           nodes {
             id
             handle
             title
             body
+            metafields(first: 10) {
+              nodes {
+                namespace
+                key
+                value
+              }
+            }
           }
         }
       }`,
@@ -152,6 +159,33 @@ export async function syncPages(
     if (!pages) break;
 
     for (const p of pages.nodes) {
+      // Build body from page content + metafields
+      let body = stripHtml(p.body || "");
+
+      const metafields = p.metafields?.nodes || [];
+      const metafieldLabels: Record<string, string> = {
+        phone: "Phone",
+        email: "Email",
+        addresslocation: "Address",
+        tradinghours: "Trading Hours",
+      };
+
+      const metafieldParts: string[] = [];
+      for (const mf of metafields) {
+        if (mf.namespace === "custom" && metafieldLabels[mf.key]) {
+          const cleaned = stripHtml(mf.value || "");
+          if (cleaned) {
+            metafieldParts.push(`${metafieldLabels[mf.key]}: ${cleaned}`);
+          }
+        }
+      }
+
+      if (metafieldParts.length > 0) {
+        body = body
+          ? `${body}\n\n${metafieldParts.join("\n")}`
+          : metafieldParts.join("\n");
+      }
+
       await db.storePage.upsert({
         where: { shop_pageId: { shop, pageId: p.id } },
         create: {
@@ -159,12 +193,12 @@ export async function syncPages(
           pageId: p.id,
           handle: p.handle,
           title: p.title,
-          body: stripHtml(p.body || ""),
+          body,
         },
         update: {
           handle: p.handle,
           title: p.title,
-          body: stripHtml(p.body || ""),
+          body,
           syncedAt: new Date(),
         },
       });
